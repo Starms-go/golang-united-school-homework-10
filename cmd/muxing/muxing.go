@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -34,8 +35,6 @@ func Start(host string, port int) {
 	}
 }
 
-// POST   | `/headers`+ Headers{"a":"2", "b":"3"} | Header `"a+b": "5"`
-
 func getParam(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	param := vars["param"]
@@ -48,9 +47,21 @@ func getBad(w http.ResponseWriter, r *http.Request) {
 }
 
 func getData(w http.ResponseWriter, r *http.Request) {
-	requestBody := []byte{}
-	r.Body.Read(requestBody)
-	response := fmt.Sprintf("I got message:\n%s", string(requestBody))
+	// requestBody := []byte{}
+	// r.Body.Read(requestBody)
+
+	defer r.Body.Close()
+
+	bodyBytes, _ := ioutil.ReadAll(r.Body)
+
+	// Error checking of the ioutil.ReadAll() request
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	bodyString := string(bodyBytes)
+
+	response := fmt.Sprintf("I got message:\n%s", bodyString)
 	fmt.Fprint(w, response)
 }
 
