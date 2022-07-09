@@ -19,12 +19,51 @@ main function reads host/port from env just for an example, flavor it following 
 
 // Start /** Starts the web server listener on given host and port.
 func Start(host string, port int) {
+
+	// type head map[string]string
+
 	router := mux.NewRouter()
+	router.HandleFunc("/name/{param}", getParam).Methods(http.MethodGet)
+	router.HandleFunc("/bad", getBad).Methods(http.MethodGet)
+	router.HandleFunc("/data", getData).Methods(http.MethodPost)
+	router.HandleFunc("/headers", getHeader).Methods(http.MethodPost)
 
 	log.Println(fmt.Printf("Starting API server on %s:%d\n", host, port))
 	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// POST   | `/headers`+ Headers{"a":"2", "b":"3"} | Header `"a+b": "5"`
+
+func getParam(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	param := vars["param"]
+	response := fmt.Sprintf("Hello, %s!", param)
+	fmt.Fprint(w, response)
+}
+
+func getBad(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(500)
+}
+
+func getData(w http.ResponseWriter, r *http.Request) {
+	requestBody := []byte{}
+	r.Body.Read(requestBody)
+	response := fmt.Sprintf("I got message:\n%s", string(requestBody))
+	fmt.Fprint(w, response)
+}
+
+func getHeader(w http.ResponseWriter, r *http.Request) {
+	a := r.Header.Get("a")
+	aInt, _ := strconv.Atoi(a)
+
+	b := r.Header.Get("b")
+	bInt, _ := strconv.Atoi(b)
+
+	headResult := strconv.Itoa(aInt + bInt)
+	w.Header().Set("a+b", headResult)
+
 }
 
 //main /** starts program, gets HOST:PORT param and calls Start func.
